@@ -1,1 +1,671 @@
 
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional AI Image Tool by Shanawar Ali</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-hover-color: #0056b3;
+            --background-color: #f8f9fa;
+            --sidebar-bg-color: #ffffff;
+            --text-color: #212529;
+            --border-color: #dee2e6;
+            --card-bg-color: #ffffff;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --switch-bg: #ccc;
+            --switch-indicator: white;
+            --header-height: 60px;
+            --mobile-nav-height: 65px;
+        }
+
+        html[data-theme='dark'] {
+            --primary-color: #4a90e2;
+            --primary-hover-color: #63a4ff;
+            --background-color: #121212;
+            --sidebar-bg-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --border-color: #333333;
+            --card-bg-color: #242424;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --switch-bg: #555;
+            --switch-indicator: #333;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            overflow: hidden;
+        }
+
+        /* --- Sidebar (Desktop) --- */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg-color);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out, background-color 0.3s, border-right 0.3s;
+            z-index: 1000;
+        }
+        .sidebar.is-open {
+            transform: translateX(0);
+        }
+        .sidebar-header {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+        }
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .sidebar-menu a svg {
+            margin-right: 12px;
+            width: 22px;
+            height: 22px;
+        }
+
+        /* --- Theme Switcher --- */
+        .theme-switcher {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        .theme-switch {
+            display: inline-block;
+            height: 24px;
+            position: relative;
+            width: 44px;
+        }
+        .theme-switch input { display: none; }
+        .slider {
+            background-color: var(--switch-bg);
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+        }
+        .slider:before {
+            background-color: var(--switch-indicator);
+            bottom: 4px;
+            content: "";
+            height: 16px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 16px;
+        }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(20px); }
+        .slider.round { border-radius: 34px; }
+        .slider.round:before { border-radius: 50%; }
+
+        /* --- Main Content --- */
+        .content-wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .main-header {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--card-bg-color);
+        }
+        .menu-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .menu-toggle .bar {
+            display: block;
+            width: 25px;
+            height: 3px;
+            margin: 5px auto;
+            background-color: var(--text-color);
+            transition: 0.4s;
+        }
+        .page-title {
+            margin-left: 20px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        .tool-section { display: none; }
+        .tool-section.active { display: block; }
+        .tool-header {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        /* --- Upload Area --- */
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s, background-color 0.3s;
+            background-color: var(--card-bg-color);
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--primary-color);
+            background-color: color-mix(in srgb, var(--primary-color) 10%, var(--card-bg-color));
+        }
+        .upload-area-icon {
+            font-size: 3.5rem;
+            color: var(--primary-color);
+        }
+        .upload-area p {
+            margin: 15px 0 5px;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .upload-area small { color: #888; }
+        #file-input { display: none; }
+        
+        /* --- Overlay for Sidebar --- */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .overlay.is-visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* --- Mobile Design --- */
+        @media (max-width: 768px) {
+            .sidebar {
+                /* Mobile: becomes bottom nav bar */
+                width: 100%;
+                height: var(--mobile-nav-height);
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+                padding: 0;
+                border-right: none;
+                border-top: 1px solid var(--border-color);
+                transform: none; /* Reset transform */
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                top: auto;
+            }
+            .sidebar-header, .theme-switcher { display: none; } /* Hide for mobile bar */
+            .sidebar-menu { display: flex; width: 100%; justify-content: space-around; }
+            .sidebar-menu li { margin: 0; }
+            .sidebar-menu a { flex-direction: column; padding: 8px 5px; height: 100%; justify-content: center; }
+            .sidebar-menu a svg { margin-right: 0; margin-bottom: 4px; }
+            .sidebar-menu a span { font-size: 0.7rem; }
+            
+            .menu-toggle { display: none; } /* Hide hamburger on mobile */
+            .main-content { padding: 20px 15px calc(var(--mobile-nav-height) + 20px) 15px; }
+            .page-title { margin-left: 0; text-align: center; flex-grow: 1; }
+        }
+
+        /* --- About Page --- */
+        .about-section .card {
+            background-color: var(--card-bg-color);
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        .about-section h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+        .about-section .developer-info {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+        .about-section .developer-info h4 {
+            margin: 10px 0 5px;
+            font-size: 1.2rem;
+        }
+        
+        /* --- Utility & General Tool UI (reused styles from previous version) --- */
+        .options-panel, .preview-area, .result-area { margin-top: 20px; }
+        .options-panel { background-color: var(--card-bg-color); padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px var(--shadow-color); }
+        .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .option-group { display: flex; flex-direction: column; }
+        .option-group label { font-weight: 500; margin-bottom: 8px; }
+        .option-group input[type="number"], .option-group input[type="text"], .option-group select { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid var(--border-color); background-color: var(--background-color); color: var(--text-color); }
+        .btn { padding: 12px 25px; border: none; background-color: var(--primary-color); color: white; border-radius: 5px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
+        .btn:hover { background-color: var(--primary-hover-color); }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-secondary:hover { background-color: #5a6268; }
+        .preview-area { padding: 20px; background-color: var(--card-bg-color); border-radius: 8px; text-align: center; }
+        #imagePreview img, #resizedPreview img, #cropper-container img { max-width: 100%; max-height: 400px; border-radius: 5px; }
+        .result-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: var(--card-bg-color); border: 1px solid var(--border-color); border-radius: 5px; margin-bottom: 10px; }
+        .comparison-slider { position: relative; display: inline-block; max-width: 100%; }
+        .comparison-slider img { display: block; width: 100%; height: auto; max-height: 400px; object-fit: contain; }
+        .comparison-slider .resize-img { position: absolute; top: 0; left: 0; width: 50%; height: 100%; object-fit: cover; object-position: left; overflow: hidden; }
+        .comparison-slider .slider-bar { position: absolute; top: 0; left: 50%; width: 4px; height: 100%; background: var(--primary-color); cursor: ew-resize; transform: translateX(-50%); }
+        .cropper-container { margin-top: 20px; }
+        .cropper-bg { background-image: none !important; }
+    </style>
+    <!-- External library for Cropping -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-header">AI Image Tool</div>
+        <ul class="sidebar-menu">
+            <li><a href="#" class="nav-link active" data-tool="converter" data-title="Image Format Converter">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M14 10H12V4H14V10ZM20 12V14H14V12H20ZM10 12H4V10H10V12ZM14 20V18H20V16H14V14H12V20H14ZM10 18H4V16H10V18ZM12 12V10H10V4H8V10H4V12H8V14H4V16H8V20H10V16H12V14H14V12H12Z"/></svg>
+                <span>Converter</span>
+            </a></li>
+            <li><a href="#" class="nav-link" data-tool="resizer" data-title="Image Resizer">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21 17H23V23H17V21H21V17ZM3 7H1V1H7V3H3V7ZM17 3V1H23V7H21V3H17ZM7 21H3V17H1V23H7V21ZM19 19H5V5H19V19Z"/></svg>
+                <span>Resizer</span>
+            </a></li>
+            <li><a href="#" class="nav-link" data-tool="cropper" data-title="Image Cropper">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16H20V18H16V6H18V16ZM17 2H19V4H17V2ZM17 20H19V22H17V20ZM13 2H15V4H13V2ZM9 2H11V4H9V2ZM5 2H7V4H5V2ZM5 6H2V8H4V18H2V20H4C4 21.1046 4.89543 22 6 22H15V20H6V8H8V6H5Z"/></svg>
+                <span>Cropper</span>
+            </a></li>
+            <li><a href="#" class="nav-link" data-tool="compressor" data-title="Image Compressor">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11 4H13V9L16.5 5.5L17.92 6.92L14.34 10.5L17.92 14.08L16.5 15.5L13 12V17H11V12L7.5 15.5L6.08 14.08L9.66 10.5L6.08 6.92L7.5 5.5L11 9V4ZM4 19H20V21H4V19Z"/></svg>
+                <span>Compressor</span>
+            </a></li>
+            <li><a href="#" class="nav-link" data-tool="about" data-title="About This Tool">
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H13V7H11V9ZM12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 17H13V11H11V17Z"/></svg>
+                <span>About</span>
+            </a></li>
+        </ul>
+        <div class="theme-switcher">
+            <span>Dark Mode</span>
+            <label class="theme-switch-wrapper">
+                <div class="theme-switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider round"></span>
+                </div>
+            </label>
+        </div>
+    </nav>
+    
+    <div class="overlay"></div>
+
+    <!-- Main Content Wrapper -->
+    <div class="content-wrapper">
+        <header class="main-header">
+            <button class="menu-toggle" aria-label="Open Menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+            <h1 id="page-title" class="page-title">Image Format Converter</h1>
+        </header>
+
+        <main class="main-content">
+
+            <!-- 1. Image Format Converter -->
+            <section id="converter" class="tool-section active">
+                <div id="converter-upload-area" class="upload-area">
+                    <div class="upload-area-icon">🔄</div>
+                    <p>Drag & drop images here, or click to select files</p>
+                    <small>Supports: JPG, PNG, WEBP, GIF, BMP</small>
+                    <input type="file" id="converter-file-input" multiple accept="image/*">
+                </div>
+                <div class="options-panel" style="display:none;">
+                    <div class="options-grid"><div class="option-group"><label for="convert-format">Convert to:</label><select id="convert-format"><option value="jpeg">JPG</option><option value="png">PNG</option><option value="webp">WEBP</option><option value="gif">GIF</option><option value="bmp">BMP</option></select></div></div>
+                    <div style="text-align:center; margin-top: 20px;"><button id="convert-btn" class="btn">Convert</button></div>
+                </div>
+                <div id="converter-preview-area" class="preview-area" style="display:none;"></div>
+                <div id="converter-result-area" class="result-area"></div>
+            </section>
+
+            <!-- 2. Image Resizer -->
+            <section id="resizer" class="tool-section">
+                <div id="resizer-upload-area" class="upload-area">
+                    <div class="upload-area-icon">📏</div>
+                    <p>Drag & drop an image here, or click to select a file</p>
+                    <input type="file" id="resizer-file-input" accept="image/*">
+                </div>
+                <div id="resizer-main" style="display:none;">
+                    <div class="preview-area"><div id="resizedPreview"><p>Your resized image will appear here.</p></div></div>
+                    <div class="options-panel">
+                        <div class="options-grid"><div class="option-group"><label for="resize-width">Width (px)</label><input type="number" id="resize-width"></div><div class="option-group"><label for="resize-height">Height (px)</label><input type="number" id="resize-height"></div><div class="option-group" style="justify-content: center;"><label><input type="checkbox" id="aspect-ratio" checked> Maintain aspect ratio</label></div></div>
+                        <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;"><button class="btn btn-secondary preset-btn" data-ratio="1:1">1:1</button><button class="btn btn-secondary preset-btn" data-ratio="16:9">16:9</button><button class="btn btn-secondary preset-btn" data-ratio="4:3">4:3</button><button class="btn btn-secondary preset-btn" data-size="1080:1080">Instagram Post</button><button class="btn btn-secondary preset-btn" data-size="1280:720">YouTube Thumbnail</button><button class="btn btn-secondary preset-btn" data-size="851:315">Facebook Cover</button></div>
+                        <div style="text-align:center; margin-top: 20px;"><button id="resize-btn" class="btn">Download Resized Image</button></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Image Cropper -->
+            <section id="cropper" class="tool-section">
+                <div id="cropper-upload-area" class="upload-area">
+                    <div class="upload-area-icon">✂️</div>
+                    <p>Drag & drop an image here, or click to select a file</p>
+                    <input type="file" id="cropper-file-input" accept="image/*">
+                </div>
+                <div id="cropper-main" style="display:none;">
+                    <div class="preview-area"><div id="cropper-container"><img id="cropper-image" src=""></div></div>
+                    <div class="options-panel">
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;"><button class="btn btn-secondary" id="crop-square">Square</button><button class="btn btn-secondary" id="crop-circle">Circle (Preview)</button><button class="btn btn-secondary" id="crop-free">Free-hand</button><button class="btn btn-secondary" id="rotate-left">Rotate Left</button><button class="btn btn-secondary" id="flip-horizontal">Flip Horizontal</button></div>
+                        <div style="text-align:center; margin-top: 20px;"><button id="crop-download-btn" class="btn">Download Cropped Image</button></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Image Compressor -->
+            <section id="compressor" class="tool-section">
+                <div id="compressor-upload-area" class="upload-area">
+                    <div class="upload-area-icon">💨</div>
+                    <p>Drag & drop an image here, or click to select a file</p>
+                    <input type="file" id="compressor-file-input" accept="image/jpeg, image/png">
+                </div>
+                <div id="compressor-main" style="display:none;">
+                    <div class="preview-area"><div id="comparison-container" class="comparison-slider"></div><div id="compression-info" style="margin-top: 15px; font-weight: 500;"></div></div>
+                    <div class="options-panel">
+                        <div class="options-grid"><div class="option-group"><label>Compression Mode:</label><div style="display:flex; gap: 15px;"><label><input type="radio" name="compress-mode" value="lossy" checked> Lossy</label><label><input type="radio" name="compress-mode" value="lossless"> Lossless (PNG only)</label></div></div><div class="option-group" id="quality-slider-group"><label for="quality-slider">Quality (Lossy): <span id="quality-value">0.8</span></label><input type="range" id="quality-slider" min="0.1" max="1" step="0.05" value="0.8"></div></div>
+                        <div style="text-align:center; margin-top: 20px;"><button id="compress-btn" class="btn">Compress</button><button id="compress-download-btn" class="btn" style="display:none;">Download Compressed Image</button></div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 5. About Page -->
+            <section id="about" class="tool-section about-section">
+                 <div class="card">
+                     <h3>About This AI Image Tool</h3>
+                     <p>This professional web application provides a comprehensive suite of tools for all your image manipulation needs. Everything is processed directly in your browser, ensuring your files are always private and secure. No images are ever uploaded to a server.</p>
+                 </div>
+                 <div class="card">
+                     <h3>Features</h3>
+                     <ul>
+                         <li><strong>Format Converter:</strong> Convert multiple images to JPG, PNG, WEBP, GIF, and more with bulk processing.</li>
+                         <li><strong>Image Resizer:</strong> Easily resize images with custom dimensions, aspect ratio locking, and presets for social media.</li>
+                         <li><strong>Image Cropper:</strong> Crop images with standard shapes, free-hand selection, rotation, and flipping.</li>
+                         <li><strong>Image Compressor:</strong> Drastically reduce file sizes using smart lossy and lossless compression, with a live before/after comparison.</li>
+                     </ul>
+                 </div>
+                 <div class="card">
+                     <div class="developer-info">
+                         <h3>Developed With Care</h3>
+                         <h4>Shanawar Ali</h4>
+                         <p>A passionate web developer dedicated to creating clean, functional, and user-friendly applications.</p>
+                     </div>
+                 </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- External libraries for functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- THEME SWITCHER ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const setInitialTheme = () => {
+            const storedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', storedTheme);
+            themeToggle.checked = storedTheme === 'dark';
+        };
+        setInitialTheme();
+        themeToggle.addEventListener('change', () => {
+            const theme = themeToggle.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        });
+
+        // --- SIDEBAR & NAVIGATION ---
+        const menuToggle = document.querySelector('.menu-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.overlay');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const toolSections = document.querySelectorAll('.tool-section');
+        const pageTitle = document.getElementById('page-title');
+
+        const closeSidebar = () => {
+            sidebar.classList.remove('is-open');
+            overlay.classList.remove('is-visible');
+        };
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('is-open');
+            overlay.classList.toggle('is-visible');
+        });
+
+        overlay.addEventListener('click', closeSidebar);
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tool = link.dataset.tool;
+                const title = link.dataset.title;
+
+                pageTitle.textContent = title;
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+
+                toolSections.forEach(s => s.classList.remove('active'));
+                document.getElementById(tool).classList.add('active');
+                
+                // Close sidebar on navigation if it's open (on desktop)
+                if (window.innerWidth > 768) {
+                    closeSidebar();
+                }
+            });
+        });
+        
+        // ALL THE TOOL LOGIC (CONVERTER, RESIZER, CROPPER, COMPRESSOR) REMAINS THE SAME AS THE PREVIOUS VERSION.
+        // It has been copied below for completeness.
+        
+        function setupDragDrop(uploadArea, fileInput) {
+            uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+            uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('dragover'); });
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length) { fileInput.files = files; fileInput.dispatchEvent(new Event('change')); }
+            });
+            uploadArea.addEventListener('click', () => { fileInput.click(); });
+        }
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+        const converterUploadArea = document.getElementById('converter-upload-area'), converterFileInput = document.getElementById('converter-file-input'), converterOptions = document.querySelector('#converter .options-panel'), converterPreview = document.getElementById('converter-preview-area'), convertBtn = document.getElementById('convert-btn'), convertFormat = document.getElementById('convert-format'), converterResultArea = document.getElementById('converter-result-area');
+        let converterFiles = [];
+        setupDragDrop(converterUploadArea, converterFileInput);
+        converterFileInput.addEventListener('change', (e) => {
+            converterFiles = Array.from(e.target.files);
+            if (converterFiles.length === 0) return;
+            converterOptions.style.display = 'block'; converterPreview.style.display = 'block'; converterPreview.innerHTML = '<h4>Live Preview:</h4>';
+            converterFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => { const img = document.createElement('img'); img.src = event.target.result; img.style.maxWidth = '100px'; img.style.margin = '5px'; converterPreview.appendChild(img); };
+                reader.readAsDataURL(file);
+            });
+            converterResultArea.innerHTML = '';
+        });
+        convertBtn.addEventListener('click', () => {
+            if (converterFiles.length === 0) return;
+            converterResultArea.innerHTML = '<h4>Results:</h4>';
+            const zip = new JSZip(); let convertedCount = 0;
+            converterFiles.forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image(); img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0);
+                        const format = convertFormat.value; const mimeType = `image/${format}`; const newFileName = `${file.name.split('.')[0]}.${format}`;
+                        canvas.toBlob(blob => {
+                            const url = URL.createObjectURL(blob); const resultItem = document.createElement('div'); resultItem.className = 'result-item';
+                            resultItem.innerHTML = `<span>${newFileName}</span> <a href="${url}" download="${newFileName}" class="btn btn-secondary">Download</a>`;
+                            converterResultArea.appendChild(resultItem); zip.file(newFileName, blob); convertedCount++;
+                            if (convertedCount === converterFiles.length && converterFiles.length > 1) {
+                                const zipBtn = document.createElement('button'); zipBtn.textContent = 'Download All as ZIP'; zipBtn.className = 'btn';
+                                zipBtn.onclick = () => { zip.generateAsync({ type: 'blob' }).then(content => { saveAs(content, 'converted_images.zip'); }); };
+                                converterResultArea.appendChild(zipBtn);
+                            }
+                        }, mimeType);
+                    };
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+        const resizerUploadArea = document.getElementById('resizer-upload-area'), resizerFileInput = document.getElementById('resizer-file-input'), resizerMain = document.getElementById('resizer-main'), widthInput = document.getElementById('resize-width'), heightInput = document.getElementById('resize-height'), aspectRatioCheckbox = document.getElementById('aspect-ratio'), resizedPreview = document.getElementById('resizedPreview'), resizeBtn = document.getElementById('resize-btn');
+        let originalWidth, originalHeight, originalAspectRatio, resizerImageSrc;
+        setupDragDrop(resizerUploadArea, resizerFileInput);
+        resizerFileInput.addEventListener('change', e => {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                resizerImageSrc = e.target.result; const img = new Image();
+                img.onload = () => {
+                    originalWidth = img.width; originalHeight = img.height; originalAspectRatio = originalWidth / originalHeight;
+                    widthInput.value = originalWidth; heightInput.value = originalHeight;
+                    resizedPreview.innerHTML = `<img src="${resizerImageSrc}" alt="Preview">`;
+                    resizerMain.style.display = 'block'; resizerUploadArea.style.display = 'none';
+                };
+                img.src = resizerImageSrc;
+            };
+            reader.readAsDataURL(file);
+        });
+        widthInput.addEventListener('input', () => { if (aspectRatioCheckbox.checked) { heightInput.value = Math.round(widthInput.value / originalAspectRatio); } });
+        heightInput.addEventListener('input', () => { if (aspectRatioCheckbox.checked) { widthInput.value = Math.round(heightInput.value * originalAspectRatio); } });
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.dataset.ratio) { const [ratioW, ratioH] = btn.dataset.ratio.split(':').map(Number); widthInput.value = originalWidth; heightInput.value = Math.round(originalWidth * (ratioH / ratioW)); }
+                if (btn.dataset.size) { const [w, h] = btn.dataset.size.split(':').map(Number); widthInput.value = w; heightInput.value = h; }
+            });
+        });
+        resizeBtn.addEventListener('click', () => {
+            const width = parseInt(widthInput.value), height = parseInt(heightInput.value); if (!width || !height) return;
+            const img = new Image(); img.src = resizerImageSrc;
+            img.onload = () => { const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); canvas.toBlob(blob => { saveAs(blob, `resized_${resizerFileInput.files[0].name}`); }); };
+        });
+        const cropperUploadArea = document.getElementById('cropper-upload-area'), cropperFileInput = document.getElementById('cropper-file-input'), cropperMain = document.getElementById('cropper-main'), cropperImage = document.getElementById('cropper-image');
+        let cropper;
+        setupDragDrop(cropperUploadArea, cropperFileInput);
+        cropperFileInput.addEventListener('change', e => {
+            const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
+            reader.onload = e => {
+                cropperImage.src = e.target.result; cropperMain.style.display = 'block'; cropperUploadArea.style.display = 'none';
+                if (cropper) { cropper.destroy(); }
+                cropper = new Cropper(cropperImage, { aspectRatio: NaN, viewMode: 1, });
+            };
+            reader.readAsDataURL(file);
+        });
+        document.getElementById('crop-square').addEventListener('click', () => cropper.setAspectRatio(1));
+        document.getElementById('crop-free').addEventListener('click', () => cropper.setAspectRatio(NaN));
+        document.getElementById('rotate-left').addEventListener('click', () => cropper.rotate(-90));
+        document.getElementById('flip-horizontal').addEventListener('click', () => cropper.scaleX(-cropper.getData().scaleX || -1));
+        document.getElementById('crop-download-btn').addEventListener('click', () => { cropper.getCroppedCanvas().toBlob(blob => { saveAs(blob, `cropped_${cropperFileInput.files[0].name}`); }); });
+        document.getElementById('crop-circle').addEventListener('click', () => { const croppedCanvas = cropper.getCroppedCanvas(); const circleCanvas = document.createElement('canvas'); const context = circleCanvas.getContext('2d'); const size = Math.min(croppedCanvas.width, croppedCanvas.height); circleCanvas.width = size; circleCanvas.height = size; context.beginPath(); context.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2, true); context.closePath(); context.clip(); context.drawImage(croppedCanvas, 0, 0, size, size); const previewWindow = window.open(); previewWindow.document.write('<img src="' + circleCanvas.toDataURL() + '"/>'); });
+        const compressorUploadArea = document.getElementById('compressor-upload-area'), compressorFileInput = document.getElementById('compressor-file-input'), compressorMain = document.getElementById('compressor-main'), qualitySlider = document.getElementById('quality-slider'), qualityValue = document.getElementById('quality-value'), compressBtn = document.getElementById('compress-btn'), downloadBtn = document.getElementById('compress-download-btn'), comparisonContainer = document.getElementById('comparison-container'), compressionInfo = document.getElementById('compression-info');
+        let compressedBlob, originalFileSize;
+        setupDragDrop(compressorUploadArea, compressorFileInput);
+        compressorFileInput.addEventListener('change', e => {
+            const file = e.target.files[0]; if(!file) return; originalFileSize = file.size;
+            const reader = new FileReader();
+            reader.onload = e => { compressorMain.style.display = 'block'; compressorUploadArea.style.display = 'none'; downloadBtn.style.display = 'none'; comparisonContainer.innerHTML = `<img src="${e.target.result}" alt="Original Image">`; compressionInfo.innerHTML = `Original Size: ${formatBytes(originalFileSize)}`; };
+            reader.readAsDataURL(file);
+});
+        qualitySlider.addEventListener('input', e => { qualityValue.textContent = e.target.value; });
+        compressBtn.addEventListener('click', () => {
+            const file = compressorFileInput.files[0]; const mode = document.querySelector('input[name="compress-mode"]:checked').value; const quality = parseFloat(qualitySlider.value);
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image(); img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0); let mimeType = 'image/jpeg'; if(mode === 'lossless' && file.type === 'image/png') { mimeType = 'image/png'; }
+                    canvas.toBlob(blob => { compressedBlob = blob; const compressedSize = blob.size; const reduction = (((originalFileSize - compressedSize) / originalFileSize) * 100).toFixed(1); compressionInfo.innerHTML = `Original: ${formatBytes(originalFileSize)} | Compressed: ${formatBytes(compressedSize)} | Reduction: ${reduction}%`; const compressedUrl = URL.createObjectURL(blob); setupComparisonSlider(e.target.result, compressedUrl); downloadBtn.style.display = 'inline-block'; }, mimeType, quality);
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+        downloadBtn.addEventListener('click', () => { if (compressedBlob) { saveAs(compressedBlob, `compressed_${compressorFileInput.files[0].name}`); } });
+        function setupComparisonSlider(beforeSrc, afterSrc) {
+            comparisonContainer.innerHTML = `<img src="${beforeSrc}" alt="Before"><div class="resize-img"><img src="${afterSrc}" alt="After"></div><div class="slider-bar"></div>`;
+            const resizeImg = comparisonContainer.querySelector('.resize-img'), sliderBar = comparisonContainer.querySelector('.slider-bar'); let isDragging = false;
+            sliderBar.addEventListener('mousedown', () => { isDragging = true; }); document.addEventListener('mouseup', () => { isDragging = false; });
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return; const rect = comparisonContainer.getBoundingClientRect(); let offsetX = e.clientX - rect.left;
+                if (offsetX < 0) offsetX = 0; if (offsetX > rect.width) offsetX = rect.width;
+                sliderBar.style.left = `${offsetX}px`; resizeImg.style.width = `${offsetX}px`;
+            });
+        }
+    });
+    </script>
+</body>
+</html>
