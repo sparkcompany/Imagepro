@@ -5,91 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatApp</title>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        #auth-container, #app-container { display: none; }
-        #auth-container.active, #app-container.active { display: block; }
-        input[type="text"], input[type="password"], input[type="email"] { width: 100%; padding: 8px; margin: 10px 0; display: inline-block; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background-color: #4CAF50; color: white; padding: 10px 15px; margin: 8px 0; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: #45a049; }
-        .user-card, .request-card, .friend-card { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
-        #chat-container { display: none; }
-        #chat-messages { height: 300px; border: 1px solid #ccc; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
-        .message { margin-bottom: 5px; }
-        .message.sent { text-align: right; }
-        .message .sender { font-weight: bold; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #fafafa; }
+        .auth-wrapper { display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .form-container { width: 350px; background: white; border: 1px solid #dbdbdb; padding: 40px; text-align: center; }
+        .main-container { display: none; grid-template-columns: 250px 1fr; height: 100vh; }
+        .sidebar { background-color: #ffffff; border-right: 1px solid #dbdbdb; padding: 20px; }
+        .sidebar h2 { margin-top: 0; }
+        .sidebar ul { list-style: none; padding: 0; }
+        .sidebar ul li { padding: 15px 10px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; }
+        .sidebar ul li:hover, .sidebar ul li.active { background-color: #efefef; }
+        .content { padding: 20px; background-color: #fafafa; overflow-y: auto; }
+        .page { display: none; }
+        .page.active { display: block; }
+        input[type="text"], input[type="password"], input[type="email"] { width: 100%; padding: 10px; margin: 8px 0; display: inline-block; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #0095f6; color: white; padding: 10px 15px; margin: 8px 0; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+        button:hover { background-color: #0077c6; }
+        #logout-btn { background-color: #ed4956; }
+        #logout-btn:hover { background-color: #c82333; }
+        .user-card, .request-card, .friend-card { background-color: #fff; border: 1px solid #dbdbdb; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .card-info strong { font-size: 1.1em; }
+        .card-info small { color: #8e8e8e; }
+        .action-btn { width: auto; padding: 8px 12px; font-size: 0.9em; }
+        #chat-container { border: 1px solid #dbdbdb; border-radius: 8px; background: #fff; }
+        #chat-header { padding: 15px; border-bottom: 1px solid #dbdbdb; font-weight: bold; }
+        #chat-messages { height: 400px; overflow-y: scroll; padding: 15px; }
+        .message-wrapper { margin-bottom: 15px; display: flex; }
+        .message { padding: 10px 15px; border-radius: 20px; max-width: 70%; }
+        .message.sent { background-color: #efefef; margin-left: auto; }
+        .message.received { background-color: #0095f6; color: white; }
+        .chat-input-area { display: flex; padding: 15px; border-top: 1px solid #dbdbdb; }
+        #message-input { flex-grow: 1; margin: 0 10px 0 0; }
+        #send-message-btn { width: auto; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>ChatApp</h1>
-
-        <!-- Authentication Section -->
-        <div id="auth-container">
-            <h2>Login or Sign Up</h2>
+    <div id="auth-container" class="auth-wrapper">
+        <div class="form-container">
+            <h1>ChatApp</h1>
             <input type="email" id="email" placeholder="Email">
             <input type="password" id="password" placeholder="Password">
             <button id="login-btn">Login</button>
             <button id="signup-btn">Sign Up</button>
         </div>
+    </div>
 
-        <!-- Main App Section -->
-        <div id="app-container">
-            <p>Welcome, <span id="current-user"></span>! <button id="logout-btn">Logout</button></p>
+    <div id="app-container" class="main-container">
+        <nav class="sidebar">
+            <h2>ChatApp</h2>
+            <p>Welcome, <strong id="current-username"></strong>!</p>
+            <ul id="nav-menu">
+                <li data-page="profile-page" class="active">My Profile</li>
+                <li data-page="search-page">Find Friends</li>
+                <li data-page="requests-page">Friend Requests</li>
+                <li data-page="friends-page">Friends & Chats</li>
+            </ul>
+            <button id="logout-btn">Logout</button>
+        </nav>
 
-            <!-- User Profile -->
-            <div>
+        <main class="content">
+            <div id="profile-page" class="page active">
                 <h3>My Profile</h3>
                 <p><strong>Username:</strong> <span id="profile-username"></span></p>
+                <p><strong>Email:</strong> <span id="profile-email"></span></p>
                 <p><strong>Town:</strong> <span id="profile-town"></span></p>
             </div>
 
-            <hr>
-
-            <!-- Find Friends -->
-            <div>
+            <div id="search-page" class="page">
                 <h3>Find Friends</h3>
-                <input type="text" id="search-username" placeholder="Enter username">
-                <button id="search-btn">Search</button>
+                <input type="text" id="search-username" placeholder="Enter username to search">
+                <button id="search-btn" style="width: auto;">Search</button>
+                <hr>
                 <div id="search-results"></div>
             </div>
 
-            <hr>
-
-            <!-- Friend Requests -->
-            <div>
+            <div id="requests-page" class="page">
                 <h3>Friend Requests</h3>
                 <div id="friend-requests"></div>
             </div>
 
-            <hr>
-
-            <!-- Friends List -->
-            <div>
-                <h3>Friends</h3>
+            <div id="friends-page" class="page">
+                <h3>My Friends</h3>
                 <div id="friends-list"></div>
             </div>
 
-            <hr>
-
-            <!-- Chat Section -->
-            <div id="chat-container">
-                <h3>Chat with <span id="chat-with-username"></span></h3>
-                <div id="chat-messages"></div>
-                <input type="text" id="message-input" placeholder="Type a message...">
-                <button id="send-message-btn">Send</button>
+            <div id="chat-page" class="page">
+                <div id="chat-container">
+                    <div id="chat-header">Chat with <span id="chat-with-username"></span></div>
+                    <div id="chat-messages"></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="message-input" placeholder="Type a message...">
+                        <button id="send-message-btn" class="action-btn">Send</button>
+                    </div>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script type="module">
-      // Import the functions you need from the SDKs you need
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
       import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-      import { getDatabase, ref, set, get, onValue, push, child } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
+      import { getDatabase, ref, set, get, onValue, push, child, query, orderByChild, equalTo, remove } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
 
-      // Your web app's Firebase configuration
       const firebaseConfig = {
         apiKey: "AIzaSyAlVd0FzdmXT5GPheciSnYu-PAA4fxB76k",
         authDomain: "studio-x1ld3.firebaseapp.com",
@@ -100,164 +117,176 @@
         appId: "1:423830962515:web:ca42a576c4d080a40461a6"
       };
 
-      // Initialize Firebase
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getDatabase(app);
 
+      // DOM Elements
       const authContainer = document.getElementById('auth-container');
       const appContainer = document.getElementById('app-container');
-      const loginBtn = document.getElementById('login-btn');
-      const signupBtn = document.getElementById('signup-btn');
-      const logoutBtn = document.getElementById('logout-btn');
-      const currentUserSpan = document.getElementById('current-user');
-      const profileUsernameSpan = document.getElementById('profile-username');
-      const profileTownSpan = document.getElementById('profile-town');
-      const searchUsernameInput = document.getElementById('search-username');
-      const searchBtn = document.getElementById('search-btn');
-      const searchResultsDiv = document.getElementById('search-results');
-      const friendRequestsDiv = document.getElementById('friend-requests');
-      const friendsListDiv = document.getElementById('friends-list');
-      const chatContainer = document.getElementById('chat-container');
-      const chatWithUsernameSpan = document.getElementById('chat-with-username');
-      const chatMessagesDiv = document.getElementById('chat-messages');
-      const messageInput = document.getElementById('message-input');
-      const sendMessageBtn = document.getElementById('send-message-btn');
-
+      const navMenu = document.getElementById('nav-menu');
+      const pages = document.querySelectorAll('.page');
       let currentUserId = null;
       let currentChattingWith = null;
+      let currentUserData = {};
 
-      // Auth state observer
+      // --- AUTHENTICATION ---
       onAuthStateChanged(auth, user => {
           if (user) {
               currentUserId = user.uid;
-              authContainer.classList.remove('active');
-              appContainer.classList.add('active');
-              currentUserSpan.textContent = user.email;
-              loadUserProfile(currentUserId);
-              loadFriendRequests(currentUserId);
-              loadFriends(currentUserId);
+              authContainer.style.display = 'none';
+              appContainer.style.display = 'grid';
+              loadInitialData(currentUserId);
           } else {
               currentUserId = null;
-              authContainer.classList.add('active');
-              appContainer.classList.remove('active');
-              chatContainer.style.display = 'none';
+              currentUserData = {};
+              authContainer.style.display = 'flex';
+              appContainer.style.display = 'none';
           }
       });
 
-      // Sign up
-      signupBtn.addEventListener('click', async () => {
+      document.getElementById('signup-btn').addEventListener('click', async () => {
           const email = document.getElementById('email').value;
           const password = document.getElementById('password').value;
           const username = prompt("Please enter a username:");
           const town = prompt("Please enter your town:");
 
-          if (username && town) {
-              try {
-                  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                  const user = userCredential.user;
-                  await set(ref(db, 'users/' + user.uid), {
-                      username: username,
-                      email: email,
-                      town: town
-                  });
-                  alert('Sign up successful!');
-              } catch (error) {
-                  alert(error.message);
-              }
-          } else {
-              alert('Username and town are required.');
-          }
-      });
-
-      // Login
-      loginBtn.addEventListener('click', async () => {
-          const email = document.getElementById('email').value;
-          const password = document.getElementById('password').value;
+          if (!username || !town) return alert('Username and town are required.');
+          
           try {
-              await signInWithEmailAndPassword(auth, email, password);
+              const usernameQuery = query(ref(db, 'users'), orderByChild('username'), equalTo(username));
+              const usernameSnapshot = await get(usernameQuery);
+              if (usernameSnapshot.exists()) {
+                  return alert('Username is already taken.');
+              }
+
+              const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+              await set(ref(db, 'users/' + userCredential.user.uid), {
+                  username: username,
+                  email: email,
+                  town: town
+              });
+              alert('Sign up successful!');
           } catch (error) {
               alert(error.message);
           }
       });
 
-      // Logout
-      logoutBtn.addEventListener('click', async () => {
-          await signOut(auth);
+      document.getElementById('login-btn').addEventListener('click', () => {
+          const email = document.getElementById('email').value;
+          const password = document.getElementById('password').value;
+          signInWithEmailAndPassword(auth, email, password).catch(error => alert(error.message));
       });
 
-      // Load user profile
-      function loadUserProfile(userId) {
-          const userRef = ref(db, 'users/' + userId);
-          onValue(userRef, (snapshot) => {
-              const data = snapshot.val();
-              if (data) {
-                  profileUsernameSpan.textContent = data.username;
-                  profileTownSpan.textContent = data.town;
-              }
+      document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+
+      // --- NAVIGATION ---
+      function showPage(pageId) {
+          pages.forEach(page => page.classList.remove('active'));
+          document.getElementById(pageId).classList.add('active');
+          document.querySelectorAll('#nav-menu li').forEach(li => {
+              li.classList.toggle('active', li.dataset.page === pageId);
           });
       }
 
-      // Search for users
-      searchBtn.addEventListener('click', async () => {
-          const searchTerm = searchUsernameInput.value.trim();
-          if (searchTerm === "") return;
+      navMenu.addEventListener('click', (e) => {
+          if (e.target.tagName === 'LI') {
+              const pageId = e.target.dataset.page;
+              showPage(pageId);
+          }
+      });
 
-          const usersRef = ref(db, 'users');
-          const snapshot = await get(usersRef);
-          searchResultsDiv.innerHTML = '';
-          if (snapshot.exists()) {
-              snapshot.forEach(childSnapshot => {
-                  const userData = childSnapshot.val();
-                  if (userData.username.toLowerCase().includes(searchTerm.toLowerCase()) && childSnapshot.key !== currentUserId) {
+      // --- DATA LOADING & RENDERING ---
+      async function loadInitialData(userId) {
+          const userRef = ref(db, 'users/' + userId);
+          onValue(userRef, (snapshot) => {
+              currentUserData = snapshot.val();
+              if (currentUserData) {
+                  document.getElementById('current-username').textContent = currentUserData.username;
+                  document.getElementById('profile-username').textContent = currentUserData.username;
+                  document.getElementById('profile-email').textContent = currentUserData.email;
+                  document.getElementById('profile-town').textContent = currentUserData.town;
+              }
+          });
+          loadFriendRequests(userId);
+          loadFriends(userId);
+          showPage('profile-page');
+      }
+
+      async function getUserData(userId) {
+          const snapshot = await get(child(ref(db, 'users'), userId));
+          return snapshot.exists() ? snapshot.val() : null;
+      }
+
+      // --- USER SEARCH ---
+      document.getElementById('search-btn').addEventListener('click', async () => {
+          const searchTerm = document.getElementById('search-username').value.trim().toLowerCase();
+          const resultsDiv = document.getElementById('search-results');
+          resultsDiv.innerHTML = 'Searching...';
+          if (searchTerm === "") {
+              resultsDiv.innerHTML = '';
+              return;
+          }
+
+          const usersSnapshot = await get(ref(db, 'users'));
+          resultsDiv.innerHTML = '';
+          let found = false;
+          if (usersSnapshot.exists()) {
+              for (const userId in usersSnapshot.val()) {
+                  if (userId === currentUserId) continue;
+                  
+                  const user = usersSnapshot.val()[userId];
+                  if (user.username.toLowerCase().includes(searchTerm)) {
+                      found = true;
                       const userCard = document.createElement('div');
                       userCard.className = 'user-card';
                       userCard.innerHTML = `
-                          <div>
-                              <strong>${userData.username}</strong><br>
-                              <small>${userData.town}</small>
+                          <div class="card-info">
+                              <strong>${user.username}</strong><br>
+                              <small>${user.town}</small>
                           </div>
-                          <button class="send-request-btn" data-uid="${childSnapshot.key}">Send Request</button>
+                          <button class="action-btn send-request-btn" data-uid="${userId}">Send Request</button>
                       `;
-                      searchResultsDiv.appendChild(userCard);
+                      resultsDiv.appendChild(userCard);
                   }
-              });
-          } else {
-              searchResultsDiv.textContent = 'No users found.';
+              }
           }
+          if (!found) resultsDiv.textContent = 'No users found.';
       });
-
-      // Send friend request
-      searchResultsDiv.addEventListener('click', async (e) => {
+      
+      document.getElementById('search-results').addEventListener('click', async e => {
           if (e.target.classList.contains('send-request-btn')) {
               const toUserId = e.target.dataset.uid;
-              const requestsRef = ref(db, `users/${toUserId}/friendRequests/${currentUserId}`);
-              await set(requestsRef, { status: 'pending' });
+              const requestRef = ref(db, `requests/${currentUserId}_${toUserId}`);
+              await set(requestRef, { from: currentUserId, to: toUserId, status: 'pending' });
+              e.target.textContent = 'Request Sent';
+              e.target.disabled = true;
               alert('Friend request sent!');
           }
       });
-
-      // Load friend requests
+      
+      // --- FRIEND REQUESTS ---
       function loadFriendRequests(userId) {
-          const requestsRef = ref(db, `users/${userId}/friendRequests`);
-          onValue(requestsRef, async (snapshot) => {
-              friendRequestsDiv.innerHTML = '';
+          const requestsQuery = query(ref(db, 'requests'), orderByChild('to'), equalTo(userId));
+          onValue(requestsQuery, async (snapshot) => {
+              const requestsDiv = document.getElementById('friend-requests');
+              requestsDiv.innerHTML = '';
               if (snapshot.exists()) {
-                  for (const fromUserId in snapshot.val()) {
-                      if (snapshot.val()[fromUserId].status === 'pending') {
-                          const userSnapshot = await get(child(ref(db, 'users'), fromUserId));
-                          if (userSnapshot.exists()) {
-                              const userData = userSnapshot.val();
+                  for (const reqId in snapshot.val()) {
+                      const request = snapshot.val()[reqId];
+                      if (request.status === 'pending') {
+                          const fromUserData = await getUserData(request.from);
+                          if (fromUserData) {
                               const requestCard = document.createElement('div');
                               requestCard.className = 'request-card';
                               requestCard.innerHTML = `
-                                  <span>${userData.username}</span>
+                                  <span>${fromUserData.username} wants to be your friend.</span>
                                   <div>
-                                      <button class="accept-btn" data-uid="${fromUserId}">Accept</button>
-                                      <button class="decline-btn" data-uid="${fromUserId}">Decline</button>
+                                      <button class="action-btn accept-btn" data-reqid="${reqId}" data-fromid="${request.from}">Accept</button>
+                                      <button class="action-btn decline-btn" data-reqid="${reqId}">Decline</button>
                                   </div>
                               `;
-                              friendRequestsDiv.appendChild(requestCard);
+                              requestsDiv.appendChild(requestCard);
                           }
                       }
                   }
@@ -265,105 +294,99 @@
           });
       }
 
-      // Accept or Decline Friend Request
-      friendRequestsDiv.addEventListener('click', async (e) => {
-          const fromUserId = e.target.dataset.uid;
-          const myRequestsRef = ref(db, `users/${currentUserId}/friendRequests/${fromUserId}`);
+      document.getElementById('friend-requests').addEventListener('click', async e => {
+          const reqId = e.target.dataset.reqid;
+          if (!reqId) return;
 
           if (e.target.classList.contains('accept-btn')) {
-              await set(myRequestsRef, { status: 'accepted' });
-              await set(ref(db, `users/${fromUserId}/friendRequests/${currentUserId}`), { status: 'accepted' });
-
+              const fromUserId = e.target.dataset.fromid;
               await set(ref(db, `users/${currentUserId}/friends/${fromUserId}`), true);
               await set(ref(db, `users/${fromUserId}/friends/${currentUserId}`), true);
-
+              await remove(ref(db, `requests/${reqId}`));
               alert('Friend request accepted!');
           } else if (e.target.classList.contains('decline-btn')) {
-              await set(myRequestsRef, { status: 'declined' });
+              await remove(ref(db, `requests/${reqId}`));
               alert('Friend request declined.');
           }
       });
 
-      // Load friends
+      // --- FRIENDS & CHATTING ---
       function loadFriends(userId) {
           const friendsRef = ref(db, `users/${userId}/friends`);
           onValue(friendsRef, async (snapshot) => {
-              friendsListDiv.innerHTML = '';
+              const friendsDiv = document.getElementById('friends-list');
+              friendsDiv.innerHTML = '';
               if (snapshot.exists()) {
                   for (const friendId in snapshot.val()) {
-                      const userSnapshot = await get(child(ref(db, 'users'), friendId));
-                      if (userSnapshot.exists()) {
-                          const userData = userSnapshot.val();
+                      const friendData = await getUserData(friendId);
+                      if (friendData) {
                           const friendCard = document.createElement('div');
                           friendCard.className = 'friend-card';
                           friendCard.innerHTML = `
-                              <span>${userData.username}</span>
-                              <button class="chat-btn" data-uid="${friendId}" data-username="${userData.username}">Chat</button>
+                              <div class="card-info">
+                                  <strong>${friendData.username}</strong><br>
+                                  <small>${friendData.town}</small>
+                              </div>
+                              <button class="action-btn chat-btn" data-uid="${friendId}" data-username="${friendData.username}">Chat</button>
                           `;
-                          friendsListDiv.appendChild(friendCard);
+                          friendsDiv.appendChild(friendCard);
                       }
                   }
               }
           });
       }
-
-      // Start chat
-      friendsListDiv.addEventListener('click', (e) => {
+      
+      document.getElementById('friends-list').addEventListener('click', e => {
           if (e.target.classList.contains('chat-btn')) {
               currentChattingWith = e.target.dataset.uid;
-              const username = e.target.dataset.username;
-              chatContainer.style.display = 'block';
-              chatWithUsernameSpan.textContent = username;
+              document.getElementById('chat-with-username').textContent = e.target.dataset.username;
+              showPage('chat-page');
               loadChatMessages(currentChattingWith);
           }
       });
 
-      // Get chat ID
       function getChatId(userId1, userId2) {
           return userId1 < userId2 ? `${userId1}_${userId2}` : `${userId2}_${userId1}`;
       }
 
-      // Load chat messages
       function loadChatMessages(friendId) {
           const chatId = getChatId(currentUserId, friendId);
-          const messagesRef = ref(db, `chats/${chatId}/messages`);
-
+          const messagesRef = ref(db, `chats/${chatId}`);
+          const messagesDiv = document.getElementById('chat-messages');
+          
           onValue(messagesRef, (snapshot) => {
-              chatMessagesDiv.innerHTML = '';
+              messagesDiv.innerHTML = '';
               if (snapshot.exists()) {
                   snapshot.forEach(childSnapshot => {
-                      const messageData = childSnapshot.val();
-                      const messageDiv = document.createElement('div');
-                      messageDiv.className = 'message' + (messageData.senderId === currentUserId ? ' sent' : '');
-                      messageDiv.innerHTML = `<span class="sender">${messageData.senderUsername}:</span> ${messageData.text}`;
-                      chatMessagesDiv.appendChild(messageDiv);
+                      const msg = childSnapshot.val();
+                      const wrapper = document.createElement('div');
+                      wrapper.className = 'message-wrapper';
+                      const messageEl = document.createElement('div');
+                      messageEl.className = 'message ' + (msg.senderId === currentUserId ? 'sent' : 'received');
+                      messageEl.textContent = msg.text;
+                      wrapper.appendChild(messageEl);
+                      messagesDiv.appendChild(wrapper);
                   });
-                  chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+                  messagesDiv.scrollTop = messagesDiv.scrollHeight;
               }
           });
       }
 
-      // Send message
-      sendMessageBtn.addEventListener('click', async () => {
-          const text = messageInput.value.trim();
+      document.getElementById('send-message-btn').addEventListener('click', async () => {
+          const text = document.getElementById('message-input').value.trim();
           if (text === "" || !currentChattingWith) return;
 
           const chatId = getChatId(currentUserId, currentChattingWith);
-          const messagesRef = ref(db, `chats/${chatId}/messages`);
-          const newMessageRef = push(messagesRef);
-
-          const currentUserSnapshot = await get(child(ref(db, 'users'), currentUserId));
-          const currentUserData = currentUserSnapshot.val();
-
+          const newMessageRef = push(ref(db, `chats/${chatId}`));
+          
           await set(newMessageRef, {
               senderId: currentUserId,
-              senderUsername: currentUserData.username,
               text: text,
               timestamp: Date.now()
           });
-
-          messageInput.value = '';
+          document.getElementById('message-input').value = '';
       });
+
     </script>
 </body>
-   </html>
+</html>
